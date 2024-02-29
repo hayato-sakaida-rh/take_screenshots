@@ -18,13 +18,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer(
-      builder: (context, watch, _) {
+      builder: (context, ref, _) {
         return MaterialApp(
           title: 'Screenshot Demo',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            primarySwatch: watch(primarySwatchProvider).state,
-            brightness: watch(brightnessProvider).state,
+            primarySwatch: ref.watch(primarySwatchProvider),
+            brightness: ref.watch(brightnessProvider),
           ),
           home: MyHomePage(),
         );
@@ -33,11 +33,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  MyHomePage({Key key}) : super(key: key);
+class MyHomePage extends ConsumerWidget {
+  MyHomePage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Screenshot Demo Home Page'),
@@ -60,10 +60,10 @@ class MyHomePage extends StatelessWidget {
               'You have pushed the button this many times:',
             ),
             Consumer(
-              builder: (context, watch, _) {
+              builder: (context, ref, _) {
                 return Text(
-                  '${watch(counterProvider).state}',
-                  style: Theme.of(context).textTheme.headline4,
+                  '${ref.watch(counterProvider)}',
+                  style: Theme.of(context).textTheme.headlineMedium,
                 );
               },
             ),
@@ -71,7 +71,7 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.read(counterProvider).state++,
+        onPressed: () => ref.read(counterProvider.notifier).state++,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ),
@@ -86,43 +86,46 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          Consumer(
-            builder: (context, watch, _) {
-              return SwitchListTile(
+      body: Consumer(
+        builder: (context, ref, _) {
+          return ListView(
+            padding: const EdgeInsets.all(8),
+            children: [
+              SwitchListTile(
                 title: const Text('Dark Mode'),
-                value: watch(brightnessProvider).state == Brightness.dark,
+                value: ref.watch(brightnessProvider.notifier).state ==
+                    Brightness.dark,
                 onChanged: (value) {
                   if (value) {
-                    context.read(brightnessProvider).state = Brightness.dark;
+                    ref.read(brightnessProvider.notifier).state =
+                        Brightness.dark;
                   } else {
-                    context.read(brightnessProvider).state = Brightness.light;
+                    ref.read(brightnessProvider.notifier).state =
+                        Brightness.light;
                   }
                 },
-              );
-            },
-          ),
-          const Divider(),
-          ListTile(
-            title: const Text('Theme Color'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildColor(Colors.blue),
-                _buildColor(Colors.red),
-                _buildColor(Colors.green),
-                _buildColor(Colors.yellow),
-              ],
-            ),
-          ),
-        ],
+              ),
+              const Divider(),
+              ListTile(
+                title: const Text('Theme Color'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildColor(ref, Colors.blue),
+                    _buildColor(ref, Colors.red),
+                    _buildColor(ref, Colors.green),
+                    _buildColor(ref, Colors.yellow),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildColor(MaterialColor color) {
+  Widget _buildColor(WidgetRef ref, MaterialColor color) {
     return Consumer(
       builder: (context, watch, _) {
         return InkWell(
@@ -131,7 +134,7 @@ class SettingsScreen extends StatelessWidget {
             height: 36,
             color: color,
             child: Offstage(
-              offstage: watch(primarySwatchProvider).state != color,
+              offstage: ref.watch(primarySwatchProvider) != color,
               child: Icon(
                 Icons.check,
                 color: color.computeLuminance() > 0.56
@@ -140,7 +143,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          onTap: () => context.read(primarySwatchProvider).state = color,
+          onTap: () => ref.read(primarySwatchProvider.notifier).state = color,
         );
       },
     );
